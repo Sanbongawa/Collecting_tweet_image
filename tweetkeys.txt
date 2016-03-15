@@ -1,0 +1,6 @@
+{
+    "token_secret": “XXXXXXXXXXXXXXX”,
+    "key": "XXXXXXXXXXXXXXX",
+    "token": "XXXXXXXXXXXXXXX",
+    "secret": "XXXXXXXXXXXXXXX"
+}
