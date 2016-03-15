@@ -4,6 +4,7 @@
 # favoしたものに画像があれば保存
 #chainerからI2vで画像分類したい。
 #途中の画像保存のpathとリプ先は変更したり削除したりお願いします。
+#3-日付超える9時間で前日で保存されてしまうのを修正
 '''
 import json
 #key.txt#
@@ -48,10 +49,11 @@ def create_clock(string_time):
     jikoku=create_date(string_time)
     jj= jikoku.hour+9
     if jj < 24:
-        j=jj
+        jh,jd = jj,jikoku.day
     else:
-        j =jj-24
-    jikan = '%d-%d%d-%02d%02d%02d'%(jikoku.year,jikoku.month,jikoku.day,j,jikoku.minute,jikoku.second)#,jikoku.microsecond)
+        jh = jj-24
+        jd = jikoku.day+1
+    jikan = '%d-%d%d-%02d%02d%02d'%(jikoku.year,jikoku.month,jd,jh,jikoku.minute,jikoku.second)#,jikoku.microsecond)
     return jikan
 
 def create_date(num):
@@ -73,7 +75,7 @@ class StreamListener(tweepy.StreamListener):
                 medias = status.target_object['extended_entities']['media']
                 str_date = status.target_object['created_at']
                 for c,m in enumerate(medias):
-                    downloading(m['media_url'],'../../Documents/streaming_image/%s-%d-%d.png'%(create_clock(str_date),c+1,cnt))
+                    downloading(m['media_url'],'fav_image/%s-%d-%d.png'%(create_clock(str_date),c+1,cnt))
                 cnt+=1
                 #print('ok')
             except Exception:
