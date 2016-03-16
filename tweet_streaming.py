@@ -4,7 +4,7 @@
 # favoしたものに画像があれば保存
 #chainerからI2vで画像分類したい。
 #途中の画像保存のpathとリプ先は変更したり削除したりお願いします。
-#3-日付超える9時間で前日で保存されてしまうのを修正
+#4-jsonの保存の変更、KeyboardInterrupt(crtl+c)で止めた際に最後にcnt保存する
 '''
 import json
 #key.txt#
@@ -49,9 +49,9 @@ def create_clock(string_time):
     jikoku=create_date(string_time)
     jj= jikoku.hour+9
     if jj < 24:
-        jh,jd = jj,jikoku.day
+        jh,jd=jj,jikoku.day
     else:
-        jh = jj-24
+        jh =jj-24
         jd = jikoku.day+1
     jikan = '%d-%d%d-%02d%02d%02d'%(jikoku.year,jikoku.month,jd,jh,jikoku.minute,jikoku.second)#,jikoku.microsecond)
     return jikan
@@ -88,7 +88,6 @@ class StreamListener(tweepy.StreamListener):
                 except Exception:
                     pass
 if __name__ == "__main__":
-    #
     try:
         with open('count.txt','r') as f:
             j=json.loads(f.read())
@@ -96,41 +95,48 @@ if __name__ == "__main__":
     except Exception:
         j={'fav_count':1}
         cnt=j['fav_count']
-    #
+    print(cnt)
     auth = get_oauth()
     api = tweepy.API(auth)
     stream = tweepy.Stream(auth, StreamListener(), secure=True)
     print ("Start Streaming!")
     #接続弾かれてもいいように回し続ける
-    while True :
-        try:
-            stream.userstream()#
-        except Exception:
-            pass
-        #streaming弾かれたら、再接続
-        print('destroy client,reconnecti')
-        [time.sleep(1) for i in tqdm(range(180))]#tqdmなしならtime.sleep(180)で、ただプログレスバーの安心感
+    try:
+        while True :
+            try:
+                stream.userstream()#
+            except Exception:
+                pass
+            #streaming弾かれたら、再接続
+            print('destroy client,reconnecti')
+            [time.sleep(1) for i in tqdm(range(180))]#tqdmなしならtime.sleep(180)で、ただプログレスバーの安心感
+            auth = get_oauth()
+            api = tweepy.API(auth)
+            stream = tweepy.Stream(auth,StreamListener())
+            try:
+                dt=datetime.now()
+                message='@自分の垢\n接続切断、復旧します。\n%d-%d/%d-%02d:%02d'%(dat.year,dt.month,dt.day,dt.hour,dt.minute)
+                api.update_status(status=message)
+            except Exception:
+                pass
+        #Nonetypeとか何かのerrorでwhileを出てきたら
         auth = get_oauth()
         api = tweepy.API(auth)
-        stream = tweepy.Stream(auth,StreamListener())
+        #とりあえず終了をリプ
         try:
-            dt=datetime.now()
-            message='@自分の垢\n接続切断、復旧します。\n%d-%d/%d-%02d:%02d'%(dat.year,dt.month,dt.day,dt.hour,dt.minute)
+            message='@自分の垢\n異常あり、システムを終了しました。\n%d-%d/%d-%02d:%02d'%(dat.year,dt.month,dt.day,dt.hour,dt.minute)
             api.update_status(status=message)
         except Exception:
             pass
+        j['fav_count']=cnt
+        with open('count.txt','w') as f:
+            f.write(json.dumps(j))
+        print('fin',cnt)
 
-    #Nonetypeとか何かのerrorでwhileを出てきたら
-    auth = get_oauth()
-    api = tweepy.API(auth)
-    #とりあえず終了をリプ
-    try:
-        message='@自分の垢\n異常あり、システムを終了しました。\n%d-%d/%d-%02d:%02d'%(dat.year,dt.month,dt.day,dt.hour,dt.minute)
-        api.update_status(status=message)
-    except Exception:
-        pass
+    except KeyboardInterrupt:
+        print('Keyborad_Stop')
     #cntを保存
     j['fav_count']=cnt
-    with open('count.txt') as f:
-        f.write(json.dumps(j,indent=4))
-    print('fin')
+    with open('count.txt','w') as f:
+        f.write(json.dumps(j))
+    print('fin',cnt)
